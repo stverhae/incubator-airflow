@@ -1318,6 +1318,7 @@ class TaskInstance(Base):
             logging.warning(hr + msg + hr)
 
             self.queued_dttm = datetime.now()
+            #self.start_date = None
             msg = "Queuing into pool {}".format(self.pool)
             logging.info(msg)
             session.merge(self)
@@ -4266,6 +4267,12 @@ class DagRun(Base):
         # todo: determine we want to use with_for_update to make sure to lock the run
         session.merge(self)
         session.commit()
+
+        #let the executor know if a dagrun was updated
+        executor = GetDefaultExecutor()
+        if executor is not None:
+            executor.dagrun_state_updated(self)
+
 
         return self.state
 

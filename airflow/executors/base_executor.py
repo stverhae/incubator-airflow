@@ -121,6 +121,7 @@ class BaseExecutor(LoggingMixin):
             ti.refresh_from_db()
             if ti.state != State.RUNNING:
                 self.running[key] = command
+                print ">>>>>>>>>>>>>>> running {}".format(key)
                 self.execute_async(key, command=command, queue=queue)
             else:
                 self.logger.debug(
@@ -132,6 +133,7 @@ class BaseExecutor(LoggingMixin):
         self.sync()
 
     def change_state(self, key, state):
+        print ">>>>>>>>>>>>>>>>>>>>>>>> change state of {} to {}   running: {}".format(key, state, self.running)
         self.running.pop(key)
         self.event_buffer[key] = state
 
@@ -168,3 +170,9 @@ class BaseExecutor(LoggingMixin):
         This method is called when the daemon receives a SIGTERM
         """
         raise NotImplementedError()
+
+    def dagrun_state_updated(self, dagrun):
+        """
+        This method is called whenever a dagrun changes status (RUNNING/SUCCESS/FAILED)
+        """
+        pass

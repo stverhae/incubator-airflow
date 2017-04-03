@@ -997,7 +997,7 @@ class SchedulerJob(BaseJob):
 
         # Put one task instance on each line
         if len(task_instances_to_examine) == 0:
-            self.logger.info("No tasks to send to the executor")
+            #self.logger.info("No tasks to send to the executor")
             return
 
         task_instance_str = "\n\t".join(
@@ -1258,7 +1258,7 @@ class SchedulerJob(BaseJob):
                    "\n" +
                    "=" * 80)
 
-        self.logger.info(log_str)
+        #self.logger.info(log_str)
 
     def _execute(self):
         self.logger.info("Starting the scheduler")
@@ -1404,7 +1404,7 @@ class SchedulerJob(BaseJob):
                 self.clear_nonexistent_import_errors(known_file_paths=known_file_paths)
 
             # Kick of new processes and collect results from finished ones
-            self.logger.info("Heartbeating the process manager")
+            #self.logger.info("Heartbeating the process manager")
             simple_dags = processor_manager.heartbeat()
 
             if self.using_sqlite:
@@ -1440,7 +1440,7 @@ class SchedulerJob(BaseJob):
                                              (State.SCHEDULED,))
 
             # Call hearbeats
-            self.logger.info("Heartbeating the executor")
+            #self.logger.info("Heartbeating the executor")
             self.executor.heartbeat()
 
             # Process events from the executor
@@ -1450,7 +1450,7 @@ class SchedulerJob(BaseJob):
             time_since_last_heartbeat = (datetime.now() -
                                          last_self_heartbeat_time).total_seconds()
             if time_since_last_heartbeat > self.heartrate:
-                self.logger.info("Heartbeating the scheduler")
+                #self.logger.info("Heartbeating the scheduler")
                 self.heartbeat()
                 last_self_heartbeat_time = datetime.now()
 
