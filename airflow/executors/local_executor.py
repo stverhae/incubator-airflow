@@ -47,8 +47,10 @@ class LocalWorker(multiprocessing.Process, LoggingMixin):
             try:
                 subprocess.check_call(command, shell=True)
                 state = State.SUCCESS
+                print ">>>>>>>>>> local success {} : {}".format(key, state)
             except subprocess.CalledProcessError as e:
                 state = State.FAILED
+                print ">>>>>>>>>> local fail {} : {}".format(key, state)
                 self.logger.error("failed to execute task {}:".format(str(e)))
                 # raise e
             self.result_queue.put((key, state))

@@ -557,7 +557,7 @@ class DagFileProcessorManager(LoggingMixin):
 
         for file_path, processor in self._processors.items():
             if processor.done:
-                self.logger.info("Processor for {} finished".format(file_path))
+                #self.logger.info("Processor for {} finished".format(file_path))
                 now = datetime.now()
                 finished_processors[file_path] = processor
                 self._last_runtime[file_path] = (now -
@@ -623,9 +623,9 @@ class DagFileProcessorManager(LoggingMixin):
             processor = self._processor_factory(file_path, log_file_path)
 
             processor.start()
-            self.logger.info("Started a process (PID: {}) to generate "
-                             "tasks for {} - logging into {}"
-                             .format(processor.pid, file_path, log_file_path))
+            #self.logger.info("Started a process (PID: {}) to generate "
+            #                 "tasks for {} - logging into {}"
+            #                 .format(processor.pid, file_path, log_file_path))
 
             self._processors[file_path] = processor
 
