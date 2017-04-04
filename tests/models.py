@@ -220,9 +220,25 @@ class DagRunTest(unittest.TestCase):
     def test_id_for_date(self):
         run_id = models.DagRun.id_for_date(
             datetime.datetime(2015, 1, 2, 3, 4, 5, 6, None))
-        self.assertEqual('scheduled__2015-01-02T03:04:05', run_id,
-                         msg='Generated run_id did not match expectations: {0}'
-                         .format(run_id))
+        self.assertEqual(
+            'scheduled__2015-01-02T03:04:05', run_id,
+            'Generated run_id did not match expectations: {0}'.format(run_id))
+
+    def test_dagrun_running_when_upstream_skipped(self):
+        """
+        Tests that a DAG run is not failed when an upstream task is skipped
+        """
+        initial_task_states = {
+            'test_short_circuit_false': State.SUCCESS,
+            'test_state_skipped1': State.SKIPPED,
+            'test_state_skipped2': State.NONE,
+        }
+        # dags/test_dagrun_short_circuit_false.py
+        dag_run = self.create_dag_run('test_dagrun_short_circuit_false',
+                                      state=State.RUNNING,
+                                      task_states=initial_task_states)
+        updated_dag_state = dag_run.update_state()
+        self.assertEqual(State.RUNNING, updated_dag_state)
 
     def test_dagrun_success_when_all_skipped(self):
         """
