@@ -4268,12 +4268,6 @@ class DagRun(Base):
         session.merge(self)
         session.commit()
 
-        #let the executor know if a dagrun was updated
-        executor = GetDefaultExecutor()
-        if executor is not None:
-            executor.dagrun_state_updated(self)
-
-
         return self.state
 
     @provide_session
