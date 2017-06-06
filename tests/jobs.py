@@ -424,7 +424,7 @@ class BackfillJobTest(unittest.TestCase):
         subdag = subdag_op_task.subdag
         subdag.schedule_interval = '@daily'
 
-        start_date = datetime.datetime.now()
+        start_date = datetime.datetime.utcnow()
         executor = TestExecutor(do_update=True)
         job = BackfillJob(dag=subdag,
                           start_date=start_date,
@@ -1089,7 +1089,7 @@ class SchedulerJobTest(unittest.TestCase):
 
         dr = scheduler.create_dag_run(dag)
         self.assertIsNotNone(dr)
-        dr.start_date = datetime.datetime.now() - datetime.timedelta(days=1)
+        dr.start_date = datetime.datetime.utcnow() - datetime.timedelta(days=1)
         session.merge(dr)
         session.commit()
 
@@ -1132,7 +1132,7 @@ class SchedulerJobTest(unittest.TestCase):
         self.assertIsNone(new_dr)
 
         # Should be scheduled as dagrun_timeout has passed
-        dr.start_date = datetime.datetime.now() - datetime.timedelta(days=1)
+        dr.start_date = datetime.datetime.utcnow() - datetime.timedelta(days=1)
         session.merge(dr)
         session.commit()
         new_dr = scheduler.create_dag_run(dag)
@@ -1448,12 +1448,12 @@ class SchedulerJobTest(unittest.TestCase):
         self.assertTrue(dag.start_date > DEFAULT_DATE)
 
         expected_run_duration = 5
-        start_time = datetime.datetime.now()
+        start_time = datetime.datetime.utcnow()
         scheduler = SchedulerJob(dag_id,
                                  run_duration=expected_run_duration,
                                  **self.default_scheduler_args)
         scheduler.run()
-        end_time = datetime.datetime.now()
+        end_time = datetime.datetime.utcnow()
 
         run_duration = (end_time - start_time).total_seconds()
         logging.info("Test ran in %.2fs, expected %.2fs",
@@ -1493,7 +1493,7 @@ class SchedulerJobTest(unittest.TestCase):
         Test to check that a DAG returns it's active runs
         """
 
-        now = datetime.datetime.now()
+        now = datetime.datetime.utcnow()
         six_hours_ago_to_the_hour = (now - datetime.timedelta(hours=6)).replace(minute=0, second=0, microsecond=0)
 
         START_DATE = six_hours_ago_to_the_hour
@@ -1547,7 +1547,7 @@ class SchedulerJobTest(unittest.TestCase):
         Test to check that a DAG with catchup = False only schedules beginning now, not back to the start date
         """
 
-        now = datetime.datetime.now()
+        now = datetime.datetime.utcnow()
         six_hours_ago_to_the_hour = (now - datetime.timedelta(hours=6)).replace(minute=0, second=0, microsecond=0)
         three_minutes_ago = now - datetime.timedelta(minutes=3)
         two_hours_and_three_minutes_ago = three_minutes_ago - datetime.timedelta(hours=2)
@@ -1608,7 +1608,7 @@ class SchedulerJobTest(unittest.TestCase):
         self.assertGreater(dr.execution_date, three_minutes_ago)
 
         # The DR should be scheduled BEFORE now
-        self.assertLess(dr.execution_date, datetime.datetime.now())
+        self.assertLess(dr.execution_date, datetime.datetime.utcnow())
 
         dag3 = DAG(DAG_NAME3,
                    schedule_interval='@hourly',
@@ -1642,7 +1642,7 @@ class SchedulerJobTest(unittest.TestCase):
         self.assertGreater(dr.execution_date, two_hours_and_three_minutes_ago)
 
         # The DR should be scheduled BEFORE now
-        self.assertLess(dr.execution_date, datetime.datetime.now())
+        self.assertLess(dr.execution_date, datetime.datetime.utcnow())
 
     def test_add_unparseable_file_before_sched_start_creates_import_error(self):
         try:

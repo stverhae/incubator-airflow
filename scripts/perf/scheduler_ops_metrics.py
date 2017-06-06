@@ -116,7 +116,7 @@ class SchedulerMetricsJob(SchedulerJob):
                                  for dag in dags for task in dag.tasks])
 
         if (len(successful_tis) == num_task_instances or
-                (datetime.now()-self.start_date).total_seconds() >
+                (datetime.utcnow()-self.start_date).total_seconds() >
                 MAX_RUNTIME_SECS):
             if (len(successful_tis) == num_task_instances):
                 self.logger.info("All tasks processed! Printing stats.")

@@ -120,8 +120,8 @@ class BranchPythonOperator(PythonOperator):
         for ti in tis:
             logging.info('Skipping task: %s', ti.task_id)
             ti.state = State.SKIPPED
-            ti.start_date = datetime.now()
-            ti.end_date = datetime.now()
+            ti.start_date = datetime.utcnow()
+            ti.end_date = datetime.utcnow()
 
         # this is defensive against dag runs that are not complete
         for task in context['task'].downstream_list:
@@ -135,8 +135,8 @@ class BranchPythonOperator(PythonOperator):
                             .format(task))
             ti = TaskInstance(task, execution_date=context['ti'].execution_date)
             ti.state = State.SKIPPED
-            ti.start_date = datetime.now()
-            ti.end_date = datetime.now()
+            ti.start_date = datetime.utcnow()
+            ti.end_date = datetime.utcnow()
             session.merge(ti)
 
         session.commit()
@@ -176,8 +176,8 @@ class ShortCircuitOperator(PythonOperator):
         for ti in tis:
             logging.info('Skipping task: %s', ti.task_id)
             ti.state = State.SKIPPED
-            ti.start_date = datetime.now()
-            ti.end_date = datetime.now()
+            ti.start_date = datetime.utcnow()
+            ti.end_date = datetime.utcnow()
 
         # this is defensive against dag runs that are not complete
         for task in context['task'].downstream_list:
@@ -188,8 +188,8 @@ class ShortCircuitOperator(PythonOperator):
                             .format(task))
             ti = TaskInstance(task, execution_date=context['ti'].execution_date)
             ti.state = State.SKIPPED
-            ti.start_date = datetime.now()
-            ti.end_date = datetime.now()
+            ti.start_date = datetime.utcnow()
+            ti.end_date = datetime.utcnow()
             session.merge(ti)
 
         session.commit()

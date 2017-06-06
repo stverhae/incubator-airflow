@@ -125,7 +125,7 @@ class DatabricksSubmitRunOperatorTest(unittest.TestCase):
           'new_cluster': NEW_CLUSTER,
           'notebook_task': TEMPLATED_NOTEBOOK_TASK,
         }
-        dag = DAG('test', start_date=datetime.now())
+        dag = DAG('test', start_date=datetime.utcnow())
         op = DatabricksSubmitRunOperator(dag=dag, task_id=TASK_ID, json=json)
         op.json = op.render_template('json', op.json, {'ds': DATE})
         expected = op._deep_string_coerce({
@@ -137,7 +137,7 @@ class DatabricksSubmitRunOperatorTest(unittest.TestCase):
 
     def test_init_with_bad_type(self):
         json = {
-            'test': datetime.now()
+            'test': datetime.utcnow()
         }
         # Looks a bit weird since we have to escape regex reserved symbols.
         exception_message = 'Type \<(type|class) \'datetime.datetime\'\> used ' + \
