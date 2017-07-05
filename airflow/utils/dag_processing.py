@@ -29,6 +29,7 @@ from datetime import datetime
 from airflow.exceptions import AirflowException
 from airflow.dag.base_dag import BaseDag, BaseDagBag
 from airflow.utils.logging import LoggingMixin
+from airflow import configuration as conf
 
 
 class SimpleDag(BaseDag):
@@ -357,6 +358,8 @@ class DagFileProcessorManager(LoggingMixin):
         self._run_count = defaultdict(int)
         # Scheduler heartbeat key.
         self._heart_beat_key = 'heart-beat'
+        self._last_file_queue_time = None
+        self._simple_dag_cache = {}
 
     @property
     def file_paths(self):
@@ -445,6 +448,13 @@ class DagFileProcessorManager(LoggingMixin):
             else:
                 self.logger.warning("Stopping processor for {}".format(file_path))
                 processor.stop()
+                # remove all deleted dags from cache
+                deleted_dags = set()
+                for simple_dag in self._simple_dag_cache.itervalues():
+                    if simple_dag._full_filepath == file_path:
+                        deleted_dags.add(simple_dag.dag_id)
+                for dag_id in deleted_dags:
+                    self._simple_dag_cache.pop(dag_id)
         self._processors = filtered_processors
 
     @staticmethod
@@ -579,30 +589,23 @@ class DagFileProcessorManager(LoggingMixin):
                                             processor.log_file))
             else:
                 for simple_dag in processor.result:
-                    simple_dags.append(simple_dag)
+                    self._simple_dag_cache[simple_dag.dag_id] = simple_dag
 
         # Generate more file paths to process if we processed all the files
         # already.
-        if len(self._file_path_queue) == 0:
+        if (len(self._file_path_queue) == 0 and
+            (self._last_file_queue_time is None or
+                     (datetime.now() - self._last_file_queue_time).total_seconds() > self._process_file_interval)):
             # If the file path is already being processed, or if a file was
             # processed recently, wait until the next batch
+            self._last_file_queue_time = datetime.utcnow()
             file_paths_in_progress = self._processors.keys()
-            now = datetime.utcnow()
-            file_paths_recently_processed = []
-            for file_path in self._file_paths:
-                last_finish_time = self.get_last_finish_time(file_path)
-                if (last_finish_time is not None and
-                    (now - last_finish_time).total_seconds() <
-                        self._process_file_interval):
-                    file_paths_recently_processed.append(file_path)
-
             files_paths_at_run_limit = [file_path
                                         for file_path, num_runs in self._run_count.items()
                                         if num_runs == self._max_runs]
 
             files_paths_to_queue = list(set(self._file_paths) -
                                         set(file_paths_in_progress) -
-                                        set(file_paths_recently_processed) -
                                         set(files_paths_at_run_limit))
 
             for file_path, processor in self._processors.items():
@@ -634,7 +637,7 @@ class DagFileProcessorManager(LoggingMixin):
         # Update scheduler heartbeat count.
         self._run_count[self._heart_beat_key] += 1
 
-        return simple_dags
+        return self._simple_dag_cache.values()
 
     def max_runs_reached(self):
         """
