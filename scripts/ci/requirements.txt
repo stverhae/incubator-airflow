@@ -12,11 +12,8 @@
 # limitations under the License.
 
 alembic
-azure-storage>=0.34.0
 bcrypt
-bleach
 boto
-boto3
 celery
 cgroupspy
 chartkick
@@ -25,9 +22,7 @@ coverage
 coveralls
 croniter
 cryptography
-datadog
 dill
-distributed
 docker-py
 filechunkio
 flake8
@@ -40,7 +35,6 @@ Flask-WTF
 flower
 freezegun
 future
-google-api-python-client>=1.5.0,<1.6.0
 gunicorn
 hdfs
 hive-thrift-py
@@ -53,16 +47,13 @@ ldap3
 lxml
 markdown
 mock
-moto
 mysqlclient
 nose
 nose-exclude
 nose-ignore-docstring==0.2
-nose-timer
-oauth2client>=2.0.2,<2.1.0
+nose-parameterized
 pandas
 pandas-gbq
-parameterized
 psutil>=4.2.0, <5.0.0
 psycopg2
 pydruid
@@ -73,8 +64,8 @@ PyOpenSSL
 PySmbClient
 python-daemon
 python-dateutil
+qds-sdk>=1.9.6
 redis
-rednose
 requests
 requests-kerberos
 setproctitle
@@ -88,4 +79,3 @@ statsd
 thrift
 thrift_sasl
 unicodecsv
-zdesk

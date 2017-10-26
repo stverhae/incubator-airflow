@@ -629,12 +629,10 @@ class HttpSensor(BaseSensorOperator):
 
     :param http_conn_id: The connection to run the sensor against
     :type http_conn_id: string
-    :param method: The HTTP request method to use
-    :type method: string
     :param endpoint: The relative part of the full url
     :type endpoint: string
-    :param request_params: The parameters to be added to the GET url
-    :type request_params: a dictionary of string key/value pairs
+    :param params: The parameters to be added to the GET url
+    :type params: a dictionary of string key/value pairs
     :param headers: The HTTP headers to be added to the GET request
     :type headers: a dictionary of string key/value pairs
     :param response_check: A check against the 'requests' response object.
@@ -646,34 +644,31 @@ class HttpSensor(BaseSensorOperator):
         depends on the option that's being modified.
     """
 
-    template_fields = ('endpoint', 'request_params')
+    template_fields = ('endpoint',)
 
     @apply_defaults
     def __init__(self,
                  endpoint,
                  http_conn_id='http_default',
-                 method='GET',
-                 request_params=None,
+                 params=None,
                  headers=None,
                  response_check=None,
                  extra_options=None, *args, **kwargs):
         super(HttpSensor, self).__init__(*args, **kwargs)
         self.endpoint = endpoint
         self.http_conn_id = http_conn_id
-        self.request_params = request_params or {}
+        self.params = params or {}
         self.headers = headers or {}
         self.extra_options = extra_options or {}
         self.response_check = response_check
 
-        self.hook = HttpHook(
-            method=method,
-            http_conn_id=http_conn_id)
+        self.hook = HttpHook(method='GET', http_conn_id=http_conn_id)
 
     def poke(self, context):
         logging.info('Poking: ' + self.endpoint)
         try:
             response = self.hook.run(self.endpoint,
-                                     data=self.request_params,
+                                     data=self.params,
                                      headers=self.headers,
                                      extra_options=self.extra_options)
             if self.response_check:

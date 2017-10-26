@@ -35,7 +35,7 @@ from airflow.operators.python_operator import ShortCircuitOperator
 from airflow.ti_deps.deps.trigger_rule_dep import TriggerRuleDep
 from airflow.utils.state import State
 from mock import patch
-from parameterized import parameterized
+from nose_parameterized import parameterized
 
 
 DEFAULT_DATE = datetime.datetime(2016, 1, 1)
@@ -52,8 +52,8 @@ class DagTest(unittest.TestCase):
         """
         dag = models.DAG('test-dag')
 
-        self.assertEqual(dict, type(dag.params))
-        self.assertEqual(0, len(dag.params))
+        assert type(dag.params) == dict
+        assert len(dag.params) == 0
 
     def test_params_passed_and_params_in_default_args_no_override(self):
         """
@@ -71,7 +71,7 @@ class DagTest(unittest.TestCase):
 
         params_combined = params1.copy()
         params_combined.update(params2)
-        self.assertEqual(params_combined, dag.params)
+        assert dag.params == params_combined
 
     def test_dag_as_context_manager(self):
         """
@@ -368,21 +368,38 @@ class DagRunTest(unittest.TestCase):
             'scheduled__2015-01-02T03:04:05', run_id,
             'Generated run_id did not match expectations: {0}'.format(run_id))
 
-    def test_dagrun_running_when_upstream_skipped(self):
-        """
-        Tests that a DAG run is not failed when an upstream task is skipped
-        """
-        initial_task_states = {
-            'test_short_circuit_false': State.SUCCESS,
-            'test_state_skipped1': State.SKIPPED,
-            'test_state_skipped2': State.NONE,
-        }
-        # dags/test_dagrun_short_circuit_false.py
-        dag_run = self.create_dag_run('test_dagrun_short_circuit_false',
-                                      state=State.RUNNING,
-                                      task_states=initial_task_states)
-        updated_dag_state = dag_run.update_state()
-        self.assertEqual(State.RUNNING, updated_dag_state)
+    def test_dagrun_find(self):
+        session = settings.Session()
+        now = datetime.datetime.now()
+
+        dag_id1 = "test_dagrun_find_externally_triggered"
+        dag_run = models.DagRun(
+            dag_id=dag_id1,
+            run_id='manual__' + now.isoformat(),
+            execution_date=now,
+            start_date=now,
+            state=State.RUNNING,
+            external_trigger=True,
+        )
+        session.add(dag_run)
+
+        dag_id2 = "test_dagrun_find_not_externally_triggered"
+        dag_run = models.DagRun(
+            dag_id=dag_id2,
+            run_id='manual__' + now.isoformat(),
+            execution_date=now,
+            start_date=now,
+            state=State.RUNNING,
+            external_trigger=False,
+        )
+        session.add(dag_run)
+
+        session.commit()
+
+        self.assertEqual(1, len(models.DagRun.find(dag_id=dag_id1, external_trigger=True)))
+        self.assertEqual(0, len(models.DagRun.find(dag_id=dag_id1, external_trigger=False)))
+        self.assertEqual(0, len(models.DagRun.find(dag_id=dag_id2, external_trigger=True)))
+        self.assertEqual(1, len(models.DagRun.find(dag_id=dag_id2, external_trigger=False)))
 
     def test_dagrun_success_when_all_skipped(self):
         """
@@ -506,7 +523,7 @@ class DagRunTest(unittest.TestCase):
         dag = DAG(
             dag_id='test_latest_runs_1',
             start_date=DEFAULT_DATE)
-        dag_1_run_1 = self.create_dag_run(dag,
+        dag_1_run_1 = self.create_dag_run(dag, 
                 execution_date=datetime.datetime(2015, 1, 1))
         dag_1_run_2 = self.create_dag_run(dag,
                 execution_date=datetime.datetime(2015, 1, 2))
@@ -531,10 +548,10 @@ class DagBagTest(unittest.TestCase):
         for dag_id in some_expected_dag_ids:
             dag = dagbag.get_dag(dag_id)
 
-            self.assertIsNotNone(dag)
-            self.assertEqual(dag_id, dag.dag_id)
+            assert dag is not None
+            assert dag.dag_id == dag_id
 
-        self.assertGreaterEqual(dagbag.size(), 7)
+        assert dagbag.size() >= 7
 
     def test_get_non_existing_dag(self):
         """
@@ -543,7 +560,7 @@ class DagBagTest(unittest.TestCase):
         dagbag = models.DagBag(include_examples=True)
 
         non_existing_dag_id = "non_existing_dag_id"
-        self.assertIsNone(dagbag.get_dag(non_existing_dag_id))
+        assert dagbag.get_dag(non_existing_dag_id) is None
 
     def test_process_file_that_contains_multi_bytes_char(self):
         """
@@ -555,7 +572,7 @@ class DagBagTest(unittest.TestCase):
         f.flush()
 
         dagbag = models.DagBag(include_examples=True)
-        self.assertEqual([], dagbag.process_file(f.name))
+        assert dagbag.process_file(f.name) == []
 
     def test_zip(self):
         """
@@ -563,7 +580,7 @@ class DagBagTest(unittest.TestCase):
         """
         dagbag = models.DagBag()
         dagbag.process_file(os.path.join(TEST_DAGS_FOLDER, "test_zip.zip"))
-        self.assertTrue(dagbag.get_dag("test_zip_dag"))
+        assert dagbag.get_dag("test_zip_dag")
 
     @patch.object(DagModel,'get_current')
     def test_get_dag_without_refresh(self, mock_dagmodel):
@@ -588,9 +605,9 @@ class DagBagTest(unittest.TestCase):
         processed_files = dagbag.process_file_calls
 
         # Should not call process_file agani, since it's already loaded during init.
-        self.assertEqual(1, dagbag.process_file_calls)
-        self.assertIsNotNone(dagbag.get_dag(dag_id))
-        self.assertEqual(1, dagbag.process_file_calls)
+        assert dagbag.process_file_calls == 1
+        assert dagbag.get_dag(dag_id) != None
+        assert dagbag.process_file_calls == 1
 
     def test_get_dag_fileloc(self):
         """
@@ -1103,29 +1120,3 @@ class TaskInstanceTest(unittest.TestCase):
                                       key=key,
                                       include_prior_dates=True),
                          value)
-
-    def test_post_execute_hook(self):
-        """
-        Test that post_execute hook is called with the Operator's result.
-        The result ('error') will cause an error to be raised and trapped.
-        """
-
-        class TestError(Exception):
-            pass
-
-        class TestOperator(PythonOperator):
-            def post_execute(self, context, result):
-                if result == 'error':
-                    raise TestError('expected error.')
-
-        dag = models.DAG(dag_id='test_post_execute_dag')
-        task = TestOperator(
-            task_id='test_operator',
-            dag=dag,
-            python_callable=lambda: 'error',
-            owner='airflow',
-            start_date=datetime.datetime(2017, 2, 1))
-        ti = TI(task=task, execution_date=datetime.datetime.utcnow())
-
-        with self.assertRaises(TestError):
-            ti.run()

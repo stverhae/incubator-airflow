@@ -100,39 +100,40 @@ class SparkSubmitHook(BaseHook):
         self._sp = None
         self._yarn_application_id = None
 
-        self._connection = self._resolve_connection()
-        self._is_yarn = 'yarn' in self._connection['master']
+        (self._master, self._queue, self._deploy_mode, self._spark_home) = self._resolve_connection()
+        self._is_yarn = 'yarn' in self._master
 
     def _resolve_connection(self):
         # Build from connection master or default to yarn if not available
-        conn_data = {'master': 'yarn',
-                     'queue': None,
-                     'deploy_mode': None,
-                     'spark_home': None,
-                     'spark_binary': 'spark-submit'}
+        master = 'yarn'
+        queue = None
+        deploy_mode = None
+        spark_home = None
 
         try:
             # Master can be local, yarn, spark://HOST:PORT or mesos://HOST:PORT
             conn = self.get_connection(self._conn_id)
             if conn.port:
-                conn_data['master'] = "{}:{}".format(conn.host, conn.port)
+                master = "{}:{}".format(conn.host, conn.port)
             else:
-                conn_data['master'] = conn.host
+                master = conn.host
 
             # Determine optional yarn queue from the extra field
             extra = conn.extra_dejson
-            conn_data['queue'] = extra.get('queue', None)
-            conn_data['deploy_mode'] = extra.get('deploy-mode', None)
-            conn_data['spark_home'] = extra.get('spark-home', None)
-            conn_data['spark_binary'] = extra.get('spark-binary', 'spark-submit')
+            if 'queue' in extra:
+                queue = extra['queue']
+            if 'deploy-mode' in extra:
+                deploy_mode = extra['deploy-mode']
+            if 'spark-home' in extra:
+                spark_home = extra['spark-home']
         except AirflowException:
             logging.debug(
                 "Could not load connection string {}, defaulting to {}".format(
-                    self._conn_id, conn_data['master']
+                    self._conn_id, master
                 )
             )
 
-        return conn_data
+        return master, queue, deploy_mode, spark_home
 
     def get_conn(self):
         pass
@@ -147,13 +148,13 @@ class SparkSubmitHook(BaseHook):
         # If the spark_home is passed then build the spark-submit executable path using
         # the spark_home; otherwise assume that spark-submit is present in the path to
         # the executing user
-        if self._connection['spark_home']:
-            connection_cmd = [os.path.join(self._connection['spark_home'], 'bin', self._connection['spark_binary'])]
+        if self._spark_home:
+            connection_cmd = [os.path.join(self._spark_home, 'bin', 'spark-submit')]
         else:
-            connection_cmd = [self._connection['spark_binary']]
+            connection_cmd = ['spark-submit']
 
         # The url ot the spark master
-        connection_cmd += ["--master", self._connection['master']]
+        connection_cmd += ["--master", self._master]
 
         if self._conf:
             for key in self._conf:
@@ -184,10 +185,10 @@ class SparkSubmitHook(BaseHook):
             connection_cmd += ["--class", self._java_class]
         if self._verbose:
             connection_cmd += ["--verbose"]
-        if self._connection['queue']:
-            connection_cmd += ["--queue", self._connection['queue']]
-        if self._connection['deploy_mode']:
-            connection_cmd += ["--deploy-mode", self._connection['deploy_mode']]
+        if self._queue:
+            connection_cmd += ["--queue", self._queue]
+        if self._deploy_mode:
+            connection_cmd += ["--deploy-mode", self._deploy_mode]
 
         # The actual script to execute
         connection_cmd += [application]
@@ -195,11 +196,8 @@ class SparkSubmitHook(BaseHook):
         # Append any application arguments
         if self._application_args:
             for arg in self._application_args:
-                if len(arg.split()) > 1:
-                    for splitted_option in arg.split():
-                        connection_cmd += [splitted_option]
-                else:
-                    connection_cmd += [arg]
+                connection_cmd += [arg]
+
         logging.debug("Spark-Submit cmd: {}".format(connection_cmd))
 
         return connection_cmd
@@ -244,7 +242,7 @@ class SparkSubmitHook(BaseHook):
             line = line.decode('utf-8').strip()
             # If we run yarn cluster mode, we want to extract the application id from
             # the logs so we can kill the application when we stop it unexpectedly
-            if self._is_yarn and self._connection['deploy_mode'] == 'cluster':
+            if self._is_yarn and self._deploy_mode == 'cluster':
                 match = re.search('(application[0-9_]+)', line)
                 if match:
                     self._yarn_application_id = match.groups()[0]
@@ -254,11 +252,12 @@ class SparkSubmitHook(BaseHook):
 
     def on_kill(self):
         if self._sp and self._sp.poll() is None:
-            logging.info('Sending kill signal to {}'.format(self._connection['spark_binary']))
-            self._sp.kill()
+            logging.info('Sending kill signal to spark-submit')
+            self.sp.kill()
 
             if self._yarn_application_id:
                 logging.info('Killing application on YARN')
-                kill_cmd = "yarn application -kill {0}".format(self._yarn_application_id).split()
-                yarn_kill = subprocess.Popen(kill_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                yarn_kill = Popen("yarn application -kill {0}".format(self._yarn_application_id),
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE)
                 logging.info("YARN killed with return code: {0}".format(yarn_kill.wait()))

@@ -56,7 +56,8 @@ class TestDbApiHook(unittest.TestCase):
                 ("world",)]
         
         self.cur.fetchall.return_value = rows
-
+        
+        
         self.assertEqual(rows, self.db_hook.get_records(statement, parameters))
         
         self.conn.close.assert_called_once()

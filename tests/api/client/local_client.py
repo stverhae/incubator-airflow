@@ -24,7 +24,7 @@ from airflow import models
 from airflow.api.client.local_client import Client
 from airflow.utils.state import State
 
-EXECDATE = datetime.datetime.utcnow()
+EXECDATE = datetime.datetime.now()
 EXECDATE_NOFRACTIONS = EXECDATE.replace(microsecond=0)
 EXECDATE_ISO = EXECDATE_NOFRACTIONS.isoformat()
 

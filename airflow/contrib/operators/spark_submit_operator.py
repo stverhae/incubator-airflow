@@ -17,7 +17,6 @@ import logging
 from airflow.contrib.hooks.spark_submit_hook import SparkSubmitHook
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
-from airflow.settings import WEB_COLORS
 
 log = logging.getLogger(__name__)
 
@@ -64,8 +63,6 @@ class SparkSubmitOperator(BaseOperator):
     :param verbose: Whether to pass the verbose flag to spark-submit process for debugging
     :type verbose: bool
     """
-    template_fields = ('_name', '_application_args',)
-    ui_color = WEB_COLORS['LIGHTORANGE']
 
     @apply_defaults
     def __init__(self,

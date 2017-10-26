@@ -20,6 +20,7 @@ from airflow.models import DagRun, DagBag
 from airflow.utils.state import State
 
 
+
 def trigger_dag(dag_id, run_id=None, conf=None, execution_date=None):
     dagbag = DagBag()
 
