@@ -316,7 +316,7 @@ class DagStatTest(unittest.TestCase):
         with dag:
             op1 = DummyOperator(task_id='A')
 
-        now = datetime.datetime.now()
+        now = datetime.datetime.utcnow()
         dr = dag.create_dagrun(
             run_id='manual__' + now.isoformat(),
             execution_date=now,
@@ -341,7 +341,7 @@ class DagStatTest(unittest.TestCase):
 class DagRunTest(unittest.TestCase):
 
     def create_dag_run(self, dag, state=State.RUNNING, task_states=None, execution_date=None):
-        now = datetime.datetime.now()
+        now = datetime.datetime.utcnow()
         if execution_date is None:
             execution_date = now
         dag_run = dag.create_dagrun(
@@ -370,7 +370,7 @@ class DagRunTest(unittest.TestCase):
 
     def test_dagrun_find(self):
         session = settings.Session()
-        now = datetime.datetime.now()
+        now = datetime.datetime.utcnow()
 
         dag_id1 = "test_dagrun_find_externally_triggered"
         dag_run = models.DagRun(
@@ -455,7 +455,7 @@ class DagRunTest(unittest.TestCase):
 
         dag.clear()
 
-        now = datetime.datetime.now()
+        now = datetime.datetime.utcnow()
         dr = dag.create_dagrun(run_id='test_dagrun_success_conditions',
                                state=State.RUNNING,
                                execution_date=now,
@@ -500,7 +500,7 @@ class DagRunTest(unittest.TestCase):
 
         session = settings.Session()
 
-        now = datetime.datetime.now()
+        now = datetime.datetime.utcnow()
 
         # Don't use create_dagrun since it will create the task instances too which we
         # don't want
@@ -763,7 +763,7 @@ class TaskInstanceTest(unittest.TestCase):
                   max_active_runs=1, concurrency=2)
         task = DummyOperator(task_id='test_requeue_over_concurrency_op', dag=dag)
 
-        ti = TI(task=task, execution_date=datetime.datetime.now())
+        ti = TI(task=task, execution_date=datetime.datetime.utcnow())
         ti.run()
         self.assertEqual(ti.state, models.State.NONE)
 
@@ -782,7 +782,7 @@ class TaskInstanceTest(unittest.TestCase):
                              pool='test_run_pooling_task_pool', owner='airflow',
                              start_date=datetime.datetime(2016, 2, 1, 0, 0, 0))
         ti = TI(
-            task=task, execution_date=datetime.datetime.now())
+            task=task, execution_date=datetime.datetime.utcnow())
         ti.run()
         self.assertEqual(ti.state, models.State.SUCCESS)
 
@@ -803,7 +803,7 @@ class TaskInstanceTest(unittest.TestCase):
             owner='airflow',
             start_date=datetime.datetime(2016, 2, 1, 0, 0, 0))
         ti = TI(
-            task=task, execution_date=datetime.datetime.now())
+            task=task, execution_date=datetime.datetime.utcnow())
         ti.run(mark_success=True)
         self.assertEqual(ti.state, models.State.SUCCESS)
 
@@ -824,7 +824,7 @@ class TaskInstanceTest(unittest.TestCase):
             owner='airflow',
             start_date=datetime.datetime(2016, 2, 1, 0, 0, 0))
         ti = TI(
-            task=task, execution_date=datetime.datetime.now())
+            task=task, execution_date=datetime.datetime.utcnow())
         ti.run()
         self.assertTrue(ti.state == models.State.SKIPPED)
 
@@ -849,7 +849,7 @@ class TaskInstanceTest(unittest.TestCase):
                 pass
 
         ti = TI(
-            task=task, execution_date=datetime.datetime.now())
+            task=task, execution_date=datetime.datetime.utcnow())
 
         # first run -- up for retry
         run_with_error(ti)
@@ -890,7 +890,7 @@ class TaskInstanceTest(unittest.TestCase):
                 pass
 
         ti = TI(
-            task=task, execution_date=datetime.datetime.now())
+            task=task, execution_date=datetime.datetime.utcnow())
 
         # first run -- up for retry
         run_with_error(ti)
@@ -933,7 +933,7 @@ class TaskInstanceTest(unittest.TestCase):
             start_date=datetime.datetime(2016, 2, 1, 0, 0, 0))
         ti = TI(
             task=task, execution_date=DEFAULT_DATE)
-        ti.end_date = datetime.datetime.now()
+        ti.end_date = datetime.datetime.utcnow()
 
         ti.try_number = 1
         dt = ti.next_retry_datetime()
@@ -1066,7 +1066,7 @@ class TaskInstanceTest(unittest.TestCase):
             pool='test_xcom',
             owner='airflow',
             start_date=datetime.datetime(2016, 6, 2, 0, 0, 0))
-        exec_date = datetime.datetime.now()
+        exec_date = datetime.datetime.utcnow()
         ti = TI(
             task=task, execution_date=exec_date)
         ti.run(mark_success=True)
@@ -1100,7 +1100,7 @@ class TaskInstanceTest(unittest.TestCase):
             pool='test_xcom',
             owner='airflow',
             start_date=datetime.datetime(2016, 6, 2, 0, 0, 0))
-        exec_date = datetime.datetime.now()
+        exec_date = datetime.datetime.utcnow()
         ti = TI(
             task=task, execution_date=exec_date)
         ti.run(mark_success=True)

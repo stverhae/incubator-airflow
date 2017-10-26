@@ -17,7 +17,7 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from datetime import datetime, timedelta
 
-now = datetime.now()
+now = datetime.utcnow()
 now_to_the_hour = (now - timedelta(0, 0, 0, 0, 0, 3)).replace(minute=0, second=0, microsecond=0)
 START_DATE = now_to_the_hour 
 DAG_NAME = 'test_dag_v1'

@@ -37,7 +37,7 @@ class LatestOnlyOperator(BaseOperator, SkipMixin):
                          allowing execution to proceed.""")
             return
 
-        now = datetime.datetime.now()
+        now = datetime.datetime.utcnow()
         left_window = context['dag'].following_schedule(
             context['execution_date'])
         right_window = context['dag'].following_schedule(left_window)

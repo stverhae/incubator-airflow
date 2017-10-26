@@ -127,7 +127,7 @@ class BranchOperatorTest(unittest.TestCase):
     def test_with_dag_run(self):
         dr = self.dag.create_dagrun(
             run_id="manual__",
-            start_date=datetime.datetime.now(),
+            start_date=datetime.datetime.utcnow(),
             execution_date=DEFAULT_DATE,
             state=State.RUNNING
         )
@@ -211,7 +211,7 @@ class ShortCircuitOperatorTest(unittest.TestCase):
         logging.error("Tasks {}".format(self.dag.tasks))
         dr = self.dag.create_dagrun(
             run_id="manual__",
-            start_date=datetime.datetime.now(),
+            start_date=datetime.datetime.utcnow(),
             execution_date=DEFAULT_DATE,
             state=State.RUNNING
         )

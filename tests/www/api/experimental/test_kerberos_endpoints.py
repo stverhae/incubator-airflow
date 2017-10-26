@@ -52,7 +52,7 @@ class ApiKerberosTests(unittest.TestCase):
             url_template = '/api/experimental/dags/{}/dag_runs'
             response = c.post(
                 url_template.format('example_bash_operator'),
-                data=json.dumps(dict(run_id='my_run' + datetime.now().isoformat())),
+                data=json.dumps(dict(run_id='my_run' + datetime.utcnow().isoformat())),
                 content_type="application/json"
             )
             self.assertEqual(401, response.status_code)
@@ -79,7 +79,7 @@ class ApiKerberosTests(unittest.TestCase):
 
             response2 = c.post(
                 url_template.format('example_bash_operator'),
-                data=json.dumps(dict(run_id='my_run' + datetime.now().isoformat())),
+                data=json.dumps(dict(run_id='my_run' + datetime.utcnow().isoformat())),
                 content_type="application/json",
                 headers=response.request.headers
             )
@@ -90,7 +90,7 @@ class ApiKerberosTests(unittest.TestCase):
             url_template = '/api/experimental/dags/{}/dag_runs'
             response = c.post(
                 url_template.format('example_bash_operator'),
-                data=json.dumps(dict(run_id='my_run' + datetime.now().isoformat())),
+                data=json.dumps(dict(run_id='my_run' + datetime.utcnow().isoformat())),
                 content_type="application/json"
             )
 

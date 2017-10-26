@@ -47,7 +47,7 @@ class ApiExperimentalTests(unittest.TestCase):
         url_template = '/api/experimental/dags/{}/dag_runs'
         response = self.app.post(
             url_template.format('example_bash_operator'),
-            data=json.dumps(dict(run_id='my_run' + datetime.now().isoformat())),
+            data=json.dumps(dict(run_id='my_run' + datetime.utcnow().isoformat())),
             content_type="application/json"
         )
 
@@ -63,7 +63,7 @@ class ApiExperimentalTests(unittest.TestCase):
     def test_trigger_dag_for_date(self):
         url_template = '/api/experimental/dags/{}/dag_runs'
         dag_id = 'example_bash_operator'
-        hour_from_now = datetime.now() + timedelta(hours=1)
+        hour_from_now = datetime.utcnow() + timedelta(hours=1)
         execution_date = datetime(hour_from_now.year,
                                   hour_from_now.month,
                                   hour_from_now.day,

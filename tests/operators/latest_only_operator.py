@@ -124,21 +124,21 @@ class LatestOnlyOperatorTest(unittest.TestCase):
 
         dr1 = self.dag.create_dagrun(
             run_id="manual__1",
-            start_date=datetime.datetime.now(),
+            start_date=datetime.datetime.utcnow(),
             execution_date=DEFAULT_DATE,
             state=State.RUNNING
         )
 
         dr2 = self.dag.create_dagrun(
             run_id="manual__2",
-            start_date=datetime.datetime.now(),
+            start_date=datetime.datetime.utcnow(),
             execution_date=datetime.datetime(2016, 1, 1, 12),
             state=State.RUNNING
         )
 
         dr2 = self.dag.create_dagrun(
             run_id="manual__3",
-            start_date=datetime.datetime.now(),
+            start_date=datetime.datetime.utcnow(),
             execution_date=END_DATE,
             state=State.RUNNING
         )

@@ -63,9 +63,9 @@ class DaskExecutorTest(unittest.TestCase):
             k for k, v in executor.futures.items() if v == 'fail')
 
         # wait for the futures to execute, with a timeout
-        timeout = datetime.datetime.now() + datetime.timedelta(seconds=30)
+        timeout = datetime.datetime.utcnow() + datetime.timedelta(seconds=30)
         while not (success_future.done() and fail_future.done()):
-            if datetime.datetime.now() > timeout:
+            if datetime.datetime.utcnow() > timeout:
                 raise ValueError(
                     'The futures should have finished; there is probably '
                     'an error communciating with the Dask cluster.')

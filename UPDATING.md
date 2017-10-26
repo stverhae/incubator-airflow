@@ -43,7 +43,7 @@ dependencies are met after an upgrade. To workaround either temporarily increase
 the the amount of queued tasks or use a new pool.
 
 ### Less forgiving scheduler on dynamic start_date
-Using a dynamic start_date (e.g. `start_date = datetime.now()`) is not considered a best practice. The 1.8.0 scheduler
+Using a dynamic start_date (e.g. `start_date = datetime.utcnow()`) is not considered a best practice. The 1.8.0 scheduler
 is less forgiving in this area. If you encounter DAGs not being scheduled you can try using a fixed start_date and
 renaming your dag. The last step is required to make sure you start with a clean slate, otherwise the old schedule can
 interfere.
