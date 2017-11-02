@@ -20,7 +20,7 @@ from __future__ import unicode_literals
 from past.builtins import basestring
 from collections import defaultdict, Counter
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import getpass
 import logging
@@ -36,7 +36,6 @@ from time import sleep
 
 import psutil
 from sqlalchemy import Column, Integer, String, DateTime, func, Index, or_, and_
-from sqlalchemy import update
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm.session import make_transient
 from tabulate import tabulate
@@ -432,7 +431,7 @@ class DagFileProcessor(AbstractDagFileProcessor):
         if not self._result_queue.empty():
             self._result = self._result_queue.get_nowait()
             self._done = True
-            logging.debug("Waiting for %s", self._process)
+            #logging.debug("Waiting for %s", self._process)
             self._process.join()
             return True
 
@@ -997,7 +996,7 @@ class SchedulerJob(BaseJob):
 
         # Put one task instance on each line
         if len(task_instances_to_examine) == 0:
-            #self.logger.info("No tasks to send to the executor")
+            # self.logger.info("No tasks to send to the executor")
             return
 
         task_instance_str = "\n\t".join(
@@ -1258,13 +1257,14 @@ class SchedulerJob(BaseJob):
                    "\n" +
                    "=" * 80)
 
-        #self.logger.info(log_str)
+        # self.logger.info(log_str)
 
     def _execute(self):
         self.logger.info("Starting the scheduler")
         pessimistic_connection_handling()
 
         logging.basicConfig(level=logging.DEBUG)
+        #logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
         # DAGs can be pickled for easier remote execution by some executors
         pickle_dags = False
@@ -1383,7 +1383,7 @@ class SchedulerJob(BaseJob):
         # For the execute duration, parse and schedule DAGs
         while (datetime.utcnow() - execute_start_time).total_seconds() < \
                 self.run_duration or self.run_duration < 0:
-            self.logger.debug("Starting Loop...")
+            #self.logger.debug("Starting Loop...")
             loop_start_time = time.time()
 
             # Traverse the DAG directory for Python files containing DAGs
@@ -1403,9 +1403,23 @@ class SchedulerJob(BaseJob):
                 self.logger.debug("Removing old import errors")
                 self.clear_nonexistent_import_errors(known_file_paths=known_file_paths)
 
+            TI = models.TaskInstance
+            DR = models.DagRun
+            df = datetime.utcnow() - timedelta(hours=12)
+            waiting = session\
+                .query(DR.dag_id)\
+                .distinct()\
+                .filter(DR.state == State.RUNNING)\
+                .filter(DR.start_date >= df.strftime('%Y-%d-%m %H:%M:%S'))\
+                .all()
+            process_dag_ids = [x[0] for x in waiting]
+
+            #.filter(TI.state == State.NONE)\
+            #.join(DR, and_(TI.dag_id == DR.dag_id, TI.execution_date == DR.execution_date))\
+
             # Kick of new processes and collect results from finished ones
             #self.logger.info("Heartbeating the process manager")
-            simple_dags = processor_manager.heartbeat()
+            simple_dags = processor_manager.heartbeat(process_dag_ids=process_dag_ids)
 
             if self.using_sqlite:
                 # For the sqlite case w/ 1 thread, wait until the processor
@@ -1440,7 +1454,7 @@ class SchedulerJob(BaseJob):
                                              (State.SCHEDULED,))
 
             # Call hearbeats
-            #self.logger.info("Heartbeating the executor")
+            # self.logger.info("Heartbeating the executor")
             self.executor.heartbeat()
 
             # Process events from the executor
@@ -1450,7 +1464,7 @@ class SchedulerJob(BaseJob):
             time_since_last_heartbeat = (datetime.utcnow() -
                                          last_self_heartbeat_time).total_seconds()
             if time_since_last_heartbeat > self.heartrate:
-                #self.logger.info("Heartbeating the scheduler")
+                # self.logger.info("Heartbeating the scheduler")
                 self.heartbeat()
                 last_self_heartbeat_time = datetime.utcnow()
 

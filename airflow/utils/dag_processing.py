@@ -549,12 +549,14 @@ class DagFileProcessorManager(LoggingMixin):
             while not processor.done:
                 time.sleep(0.1)
 
-    def heartbeat(self):
+
+    def heartbeat(self, process_dag_ids=None):
         """
         This should be periodically called by the scheduler. This method will
         kick of new processes to process DAG definition files and read the
         results from the finished processors.
 
+        :type process_dag_ids: list[unicode]
         :return: a list of SimpleDags that were produced by processors that
         have finished since the last time this was called
         :rtype: list[SimpleDag]
@@ -589,6 +591,20 @@ class DagFileProcessorManager(LoggingMixin):
             else:
                 for simple_dag in processor.result:
                     self._simple_dag_cache[simple_dag.dag_id] = simple_dag
+
+        # add add files for known dag ids in process_dag_ids to the processing queue
+        if process_dag_ids is not None:
+            file_paths_in_progress = self._processors.keys()
+            for dag_id in process_dag_ids:
+                # print(dag_id, self._simple_dag_cache.keys())
+                if dag_id in self._simple_dag_cache.keys():
+                    simple_dag = self._simple_dag_cache[dag_id]
+                    file_path = simple_dag._full_filepath
+                    if file_path not in file_paths_in_progress and file_path not in self._file_path_queue:
+                        self._file_path_queue.insert(0, file_path)
+
+
+
 
         # Generate more file paths to process if we processed all the files
         # already.
