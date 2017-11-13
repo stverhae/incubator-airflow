@@ -1410,7 +1410,7 @@ class SchedulerJob(BaseJob):
                 .query(DR.dag_id)\
                 .distinct()\
                 .filter(DR.state == State.RUNNING)\
-                .filter(DR.start_date >= df.strftime('%Y-%d-%m %H:%M:%S'))\
+                .filter(DR.start_date >= df.strftime('%Y-%m-%d %H:%M:%S'))\
                 .all()
             process_dag_ids = [x[0] for x in waiting]
 
