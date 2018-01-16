@@ -50,11 +50,13 @@ def provide_session(func):
             needs_session = True
             session = settings.Session()
             kwargs[arg_session] = session
-        result = func(*args, **kwargs)
-        if needs_session:
-            session.expunge_all()
-            session.commit()
-            session.close()
+        try:
+            result = func(*args, **kwargs)
+        finally:
+            if needs_session:
+                session.expunge_all()
+                session.commit()
+                session.close()
         return result
     return wrapper
 
