@@ -70,7 +70,7 @@ from airflow.utils.state import State
 from airflow.utils.db import provide_session
 from airflow.utils.helpers import alchemy_to_dict
 from airflow.utils import logging as log_utils
-from airflow.utils.dates import infer_time_unit, scale_time_units
+from airflow.utils.dates import infer_time_unit, scale_time_units, date_range as utils_date_range
 from airflow.www import utils as wwwutils
 from airflow.www.forms import DateTimeForm, DateTimeWithNumRunsForm
 from airflow.configuration import AirflowConfigException
@@ -1162,6 +1162,8 @@ class Airflow(BaseView):
             base_date = dag.latest_execution_date or datetime.utcnow()
 
         dates = dag.date_range(base_date, num=-abs(num_runs))
+        if not dates:
+            dates = utils_date_range(base_date, num=-abs(num_runs), delta=timedelta(hours=1))
         min_date = dates[0] if dates else datetime(2000, 1, 1)
 
         DR = models.DagRun
