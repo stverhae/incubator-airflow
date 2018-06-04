@@ -642,6 +642,15 @@ class DagFileProcessorManager(LoggingMixin):
 
             self._file_path_queue.extend(files_paths_to_queue)
 
+        # check if any processors seem stuck and terminate them
+        now = datetime.utcnow()
+        for file_path, processor in self._processors.items():
+            if not processor.done:
+                runtime = now - processor.start_time
+                if runtime.seconds > 60:
+                    processor.terminate()
+                    self.logger.warning("DagFileProcessor process killed because it didn't finish in time (60s)")
+
         # Start more processors if we have enough slots and files to process
         while (self._parallelism - len(self._processors) > 0 and
                len(self._file_path_queue) > 0):

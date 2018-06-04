@@ -428,7 +428,7 @@ class DagFileProcessor(AbstractDagFileProcessor):
         if self._done:
             return True
 
-        if not self._result_queue.empty():
+        if self._result_queue is not None and not self._result_queue.empty():
             self._result = self._result_queue.get_nowait()
             self._done = True
             #logging.debug("Waiting for %s", self._process)
@@ -439,7 +439,7 @@ class DagFileProcessor(AbstractDagFileProcessor):
         if not self._process.is_alive():
             self._done = True
             # Get the object from the queue or else join() can hang.
-            if not self._result_queue.empty():
+            if self._result_queue is not None and not self._result_queue.empty():
                 self._result = self._result_queue.get_nowait()
             logging.debug("Waiting for %s", self._process)
             self._process.join()
