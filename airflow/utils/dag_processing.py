@@ -648,7 +648,7 @@ class DagFileProcessorManager(LoggingMixin):
             if not processor.done:
                 runtime = now - processor.start_time
                 if runtime.seconds > 60:
-                    processor.terminate()
+                    processor.terminate(True)
                     self.logger.warning("DagFileProcessor process killed because it didn't finish in time (60s)")
 
         # Start more processors if we have enough slots and files to process
